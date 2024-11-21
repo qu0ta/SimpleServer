@@ -6,8 +6,6 @@ import (
 	"net/http"
 )
 
-var OK = http.StatusOK
-
 func GetName(c *gin.Context) {
 	var message string
 	name := c.Param("name")
@@ -18,7 +16,7 @@ func GetName(c *gin.Context) {
 	})
 }
 func MainPage(c *gin.Context) {
-	c.JSON(OK, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"success": "true",
 		"message": "welcome!",
 	})
@@ -29,7 +27,7 @@ func ToMain(c *gin.Context) {
 }
 
 func SignUp(c *gin.Context) {
-	c.Redirect(http.StatusPermanentRedirect, "/")
+	c.JSON(200, "Send POST request to /auth/signup with params: name, email, password")
 
 }
 
