@@ -31,12 +31,12 @@ func SignUp(c *gin.Context) {
 
 }
 
-func LogIn(c *gin.Context) {
-	c.Redirect(http.StatusPermanentRedirect, "/")
+func Auth(c *gin.Context) {
+	c.JSON(200, "Send POST request to /auth/login with params: name, password")
 
 }
 
-func LogOut(c *gin.Context) {
-	c.Redirect(http.StatusPermanentRedirect, "/")
+func SignOut(c *gin.Context) {
+	c.JSON(200, "Send POST request to /auth/logout")
 
 }

@@ -6,33 +6,32 @@ import (
 	"encoding/hex"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"log"
-	"log/slog"
 	"net/http"
 )
 
-type UserForm struct {
+type UserReg struct {
 	Name     string `json:"name" binding:"required"`
 	Email    string `json:"email" binding:"required"`
 	Password string `json:"password" binding:"required"`
 }
 
+type UserAuth struct {
+	Name     string `json:"name" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+
 func Register(c *gin.Context) {
-	var user UserForm
+	var user UserReg
 	if err := c.ShouldBindJSON(&user); err != nil {
-		slog.Error("Error while parsing data: " + err.Error())
-		log.Println("Error while parsing data: " + err.Error())
-		c.JSON(200, gin.H{"success": false, "error": err})
+		pkg.BaseErrorHandler(c, err, "Error while parsing data")
 		return
 	}
-	hash := sha256.Sum256([]byte(user.Password))
-	hashString := hex.EncodeToString(hash[:])
+	hashString := PasswordHash(user.Password)
 
 	conn, _ := pkg.Pool.Acquire(c)
 	_, err := conn.Exec(c, `INSERT INTO users (name, email, password) VALUES ($1, $2, $3)`, user.Name, user.Email, hashString)
 	if err != nil {
-		slog.Error("Error while insert user: ", err.Error())
-		log.Fatalln("Error while insert user: " + err.Error())
+		pkg.BaseErrorHandler(c, err, "Error while insert user")
 		return
 	}
 
@@ -41,11 +40,54 @@ func Register(c *gin.Context) {
 	session.Set("logged_in", true)
 
 	if err = session.Save(); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"success": "false", "error": err.Error()})
-		slog.Error("Error while saving session: ", err.Error())
-		log.Fatalln("Error while saving session: " + err.Error())
+		pkg.BaseErrorHandler(c, err, "Error while saving session")
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"success": "true", "message": "User registered successfully"})
+}
+
+func PasswordHash(password string) string {
+	hash := sha256.Sum256([]byte(password))
+	hashString := hex.EncodeToString(hash[:])
+	return hashString
+}
+
+func LogIn(c *gin.Context) {
+	var user UserAuth
+	if err := c.ShouldBindJSON(&user); err != nil {
+		pkg.BaseErrorHandler(c, err, "Error while login user")
+		return
+	}
+
+	DBUser := pkg.GetUserByName(c, user.Name)
+	if DBUser == nil {
+		return
+	}
+	if PasswordHash(user.Password) != DBUser.Password {
+		pkg.BaseErrorHandler(c, nil, "Incorrect credentials.")
+		return
+	}
+
+	session := sessions.Default(c)
+	session.Set("name", user.Name)
+	session.Set("logged_in", true)
+
+	if err := session.Save(); err != nil {
+		pkg.BaseErrorHandler(c, err, "Error while saving session")
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": "true", "message": "User logged in successfully"})
+
+}
+
+func LogOut(c *gin.Context) {
+	session := sessions.Default(c)
+	session.Clear()
+	if err := session.Save(); err != nil {
+		pkg.BaseErrorHandler(c, err, "Error while saving session")
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
 }

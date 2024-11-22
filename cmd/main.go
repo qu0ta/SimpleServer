@@ -42,9 +42,9 @@ func main() {
 	{
 		auth.GET("/signup", handlers.SignUp)
 		auth.POST("/signup", handlers.Register)
-		auth.GET("/login", handlers.LogIn)
+		auth.GET("/login", handlers.Auth)
 		auth.POST("/login", handlers.LogIn)
-		auth.GET("/logout", handlers.LogOut)
+		auth.GET("/logout", handlers.SignOut)
 		auth.POST("/logout", handlers.LogOut)
 	}
 	r.GET("/", handlers.MainPage)
