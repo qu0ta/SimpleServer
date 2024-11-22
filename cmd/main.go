@@ -1,7 +1,10 @@
+// Package main contains the entry point of the program and the main api handles
+//
+// This package includes main functions to interact with the server:
 package main
 
 import (
-	"Server/internal/handlers"
+	handlers2 "Server/handlers"
 	"Server/logging"
 	"Server/pkg"
 	"fmt"
@@ -34,20 +37,20 @@ func main() {
 
 	greetings := r.Group("/greetings")
 	{
-		greetings.GET("/:name", handlers.GetName)
-		greetings.GET("/", handlers.ToMain)
+		greetings.GET("/:name", handlers2.GetName)
+		greetings.GET("/", handlers2.ToMain)
 	}
 
 	auth := r.Group("/auth")
 	{
-		auth.GET("/signup", handlers.SignUp)
-		auth.POST("/signup", handlers.Register)
-		auth.GET("/login", handlers.Auth)
-		auth.POST("/login", handlers.LogIn)
-		auth.GET("/logout", handlers.SignOut)
-		auth.POST("/logout", handlers.LogOut)
+		auth.GET("/signup", handlers2.SignUp)
+		auth.POST("/signup", handlers2.Register)
+		auth.GET("/login", handlers2.Auth)
+		auth.POST("/login", handlers2.LogIn)
+		auth.GET("/logout", handlers2.SignOut)
+		auth.POST("/logout", handlers2.LogOut)
 	}
-	r.GET("/", handlers.MainPage)
+	r.GET("/", handlers2.MainPage)
 	r.GET("/session-data", func(c *gin.Context) {
 		session := sessions.Default(c)
 
